@@ -51,22 +51,12 @@ public final class Main {
 
 
   // takes in 2 star numbers and the star coordinates returns the distance between them
-  private double getDistance(Integer star1, Integer star2, List<Float> xlist, List<Float> ylist, List<Float> zlist){
-    Float x1 = xlist.get(star1);
-    Float y1 = ylist.get(star1);
-    Float z1 = zlist.get(star1);
-
-    Float x2 = xlist.get(star2);
-    Float y2 = ylist.get(star2);
-    Float z2 = zlist.get(star2);
-    double distance =
+  private float getDistance(Float x1, Float x2, Float y1, Float y2, Float z1, Float z2){
+    float distance = (float)
         Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2) + Math.pow((z2 - z1), 2));
-
     return distance;
   }
 
-
-  @SuppressWarnings("checkstyle:WhitespaceAround")
   private void run() {
     // set up parsing of command line flags
     OptionParser parser = new OptionParser();
@@ -79,101 +69,103 @@ public final class Main {
         .defaultsTo(DEFAULT_PORT);
 
     OptionSet options = parser.parse(args);
+
+    ArrayList<String[]> stored_stars = new ArrayList<String[]>();
     if (options.has("gui")) {
       runSparkServer((int) options.valueOf("port"));
     }
 
-
+    // TODO: Add your REPL here!
     try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
       String input;
-
       while ((input = br.readLine()) != null) {
-        //initializes variables to track stars
-        List<Integer> numlist = new ArrayList<Integer>();
-        List<String> namelist = new ArrayList<String>();
-        List<Float> xlist = new ArrayList<Float>();
-        List<Float> ylist = new ArrayList<Float>();
-        List<Float> zlist = new ArrayList<Float>();
-        List importedstars = new ArrayList<String>();
-
         try {
           input = input.trim();
           MathBot myBot = new MathBot();
           String[] arguments = input.split(" ");
-
-          if (arguments[0].equals("naive_neighbors") && arguments.length == 5){
-            Integer k = Integer.parseInt(arguments[1]);
-            Integer[] closest_stars = new Integer[k];
-            Float my_star_x = Float.parseFloat(arguments[2]);
-            Float my_star_y = Float.parseFloat(arguments[3]);
-            Float my_star_z = Float.parseFloat(arguments[4]);
-
-            //iterate through all stored stars
-            for (int i = 0; i < namelist.size(); i++){
-              //compare euclidian distances
-              Float x2 = xlist.get(i);
-              Float y2 = ylist.get(i);
-              Float z2 = zlist.get(i);
-
-              double distance_to_mystar =
-                  Math.sqrt(Math.pow((x2 - my_star_x), 2) + Math.pow((y2 - my_star_y), 2) + Math.pow((z2 - my_star_z), 2));
-
-            }
-            System.out.println("hold on dummy");
-          }
-
-          //adds 2 numbers when "add" is used
-          if (arguments[0].equals("add")) {
-            Double num1 = Double.parseDouble(arguments[1]);
-            Double num2 = Double.parseDouble(arguments[2]);
-            arguments[0] = Double.toString(myBot.add(num1, num2));
-            System.out.println(arguments[0]);
-          }
-
-          //subtracts 2 numbers when "subtract" is used
-          if (arguments[0].equals("subtract")) {
-            Double num1 = Double.parseDouble(arguments[1]);
-            Double num2 = Double.parseDouble(arguments[2]);
-            arguments[0] = Double.toString(myBot.subtract(num1, num2));
-            System.out.println(arguments[0]);
-          }
-          //loads a file containing stars' position information
-          if (arguments[0].equals("stars")) {
-            System.out.println("stars?");
-            File filename = new File(arguments[1]);
-
-            try (BufferedReader mybr = new BufferedReader(new InputStreamReader(
-                new FileInputStream(filename), StandardCharsets.UTF_8))) {
-
-              // reads the file line by line
-              mybr.readLine(); // removes title line
-              String line;
-              while ((line = mybr.readLine()) != null) {
-
-                String[] columns = line.split(",");
-
-//                Integer starnum = Integer.parseInt(columns[0]);
-//
-//                //stores the star's number in the numlist
-//                numlist.set(starnum, starnum);
-//
-//                //stores the star's name and coordinates
-//                namelist.set(starnum, "sol");
-//                xlist.set(starnum, Float.parseFloat(columns[2]));
-//                ylist.set(starnum, Float.parseFloat(columns[3]));
-//                zlist.set(starnum, Float.parseFloat(columns[4]));
-//
-//                //test to see how things are going (hint: not too good ;) )
-//                System.out.println("Dist 1 and 2" + getDistance(1, 2, xlist, ylist, zlist) + "]");
+          switch(arguments[0]){
+            //add command: adds 2 numbers
+            case "add":
+              try {
+                Double num1 = Double.parseDouble(arguments[1]);
+                Double num2 = Double.parseDouble(arguments[2]);
+                arguments[0] = Double.toString(myBot.add(num1, num2));
+                System.out.println(arguments[0]);
+              } catch (Exception e) {
+                System.out.println("ERROR: Improper input for add");
               }
+              break;
 
-            } catch (IOException e) {
-              System.out.println("ERROR: File not found");
-            }
+            //subtract command: subtracts 2 numbers
+            case "subtract":
+              try {
+                Double num1 = Double.parseDouble(arguments[1]);
+                Double num2 = Double.parseDouble(arguments[2]);
+                arguments[0] = Double.toString(myBot.subtract(num1, num2));
+                System.out.println(arguments[0]);
+              } catch (Exception e) {
+                System.out.println("ERROR: Improper input for subtract");
+              }
+              break;
+
+            //loads a file containing stars' position information
+            case "stars":
+              File filename = new File(arguments[1]);
+              try (BufferedReader mybr = new BufferedReader(new InputStreamReader(
+                  new FileInputStream(filename), StandardCharsets.UTF_8))) {
+
+                // reads the file line by line
+                mybr.readLine(); // removes title line
+                String line;
+                while ((line = mybr.readLine()) != null) {
+                  String[] columns = line.split(",");
+                  //stores star's data
+                  stored_stars.add(columns);
+                }
+                System.out.println("stars imported");
+              } catch (IOException e) {
+                System.out.println("ERROR: File not found");
+              }
+              break;
+
+            case "naive_neighbors":
+              if (arguments.length == 5) {
+
+                Integer k = Integer.parseInt(arguments[1]);
+                Integer[] closest_stars = new Integer[k];
+                Float x1 = Float.parseFloat(arguments[2]);
+                Float y1 = Float.parseFloat(arguments[3]);
+                Float z1 = Float.parseFloat(arguments[4]);
+                System.out.println("stored_stars.size() = " + stored_stars.size());
+                System.out.println("stored_stars.get(i) = " + stored_stars.get(0));
+
+                for (int i = 0; i < stored_stars.size(); i++){
+                  System.out.println("i = " + i);
+                  System.out.println("i = " + stored_stars.size());
+                  System.out.println("stored_stars.get(i) = " + stored_stars.get(i));
+
+                  String[] star = stored_stars.get(i);
+                  System.out.println("star" + star);
+
+                  System.out.println("Float.parseFloat(star[1])" + Float.parseFloat(star[1]));
+                  Float x2 = Float.parseFloat(star[1]);
+                  Float y2 = Float.parseFloat(star[2]);
+                  Float z2 = Float.parseFloat(star[3]);
+                  System.out.println("star x2: " + x2);
+                  System.out.println("star x2: " + y2);
+
+                  Float dist = getDistance(x1, x2, y1, y2,z1, z2);
+                  System.out.println("star " + star);
+                  System.out.println("dist " + dist);
+                }
+
+              }
+              else {
+                System.out.println("ERROR: please enter in the form: 'naive_neighbors k x y z'");
+              }
+              break;
 
           }
-
-
         } catch (Exception e) {
           // e.printStackTrace();
           System.out.println("ERROR: We couldn't process your input");
@@ -185,6 +177,37 @@ public final class Main {
     }
 
   }
+
+//          if (arguments[0].equals("naive_neighbors") && arguments.length == 5){
+//            Integer k = Integer.parseInt(arguments[1]);
+//            Integer[] closest_stars = new Integer[k];
+//            Float my_star_x = Float.parseFloat(arguments[2]);
+//            Float my_star_y = Float.parseFloat(arguments[3]);
+//            Float my_star_z = Float.parseFloat(arguments[4]);
+//
+//            System.out.println("Name :" + stored_stars.get(3)[1]);
+//            }
+//
+//          //loads a file containing stars' position information
+//          if (arguments[0].equals("stars")) {
+//            File filename = new File(arguments[1]);
+//            try (BufferedReader mybr = new BufferedReader(new InputStreamReader(
+//                new FileInputStream(filename), StandardCharsets.UTF_8))) {
+//
+//              // reads the file line by line
+//              mybr.readLine(); // removes title line
+//              String line;
+//              while ((line = mybr.readLine()) != null) {
+//                String[] columns = line.split(",");
+//                //stores star's data
+//                stored_stars.add(columns);
+//              }
+//            } catch (IOException e) {
+//              System.out.println("ERROR: File not found");
+//            }
+//
+//          }
+
 
   private static FreeMarkerEngine createEngine() {
     Configuration config = new Configuration(Configuration.VERSION_2_3_0);
