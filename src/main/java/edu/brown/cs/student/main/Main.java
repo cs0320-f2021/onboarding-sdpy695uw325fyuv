@@ -137,7 +137,6 @@ public final class Main {
             arguments[0] = Double.toString(myBot.subtract(num1, num2));
             System.out.println(arguments[0]);
           }
-
           //loads a file containing stars' position information
           if (arguments[0].equals("stars")) {
             System.out.println("stars?");
