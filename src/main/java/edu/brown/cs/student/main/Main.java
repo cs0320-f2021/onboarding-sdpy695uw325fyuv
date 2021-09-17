@@ -130,33 +130,33 @@ public final class Main {
 
             case "naive_neighbors":
               if (arguments.length == 5) {
-
                 Integer k = Integer.parseInt(arguments[1]);
-                Integer[] closest_stars = new Integer[k];
+                String[][] closest_stars = new String[k][];
+                for (int i = 0; i < k; i++){
+                  closest_stars[k][0] = String.valueOf(Double.MAX_VALUE);
+                }
                 Float x1 = Float.parseFloat(arguments[2]);
                 Float y1 = Float.parseFloat(arguments[3]);
                 Float z1 = Float.parseFloat(arguments[4]);
-                System.out.println("stored_stars.size() = " + stored_stars.size());
-                System.out.println("stored_stars.get(i) = " + stored_stars.get(0));
 
                 for (int i = 0; i < stored_stars.size(); i++){
-                  System.out.println("i = " + i);
-                  System.out.println("i = " + stored_stars.size());
-                  System.out.println("stored_stars.get(i) = " + stored_stars.get(i));
-
                   String[] star = stored_stars.get(i);
-                  System.out.println("star" + star);
-
-                  System.out.println("Float.parseFloat(star[1])" + Float.parseFloat(star[1]));
-                  Float x2 = Float.parseFloat(star[1]);
-                  Float y2 = Float.parseFloat(star[2]);
-                  Float z2 = Float.parseFloat(star[3]);
-                  System.out.println("star x2: " + x2);
-                  System.out.println("star x2: " + y2);
+                  Float x2 = Float.parseFloat(star[2]);
+                  Float y2 = Float.parseFloat(star[3]);
+                  Float z2 = Float.parseFloat(star[4]);
 
                   Float dist = getDistance(x1, x2, y1, y2,z1, z2);
-                  System.out.println("star " + star);
-                  System.out.println("dist " + dist);
+
+                  for (int j = 0; j < k; j++){
+                    if (Double.parseDouble(closest_stars[j][0]) < dist){
+                      closest_stars[j][0] = String.valueOf(dist);
+                      closest_stars[j][1] = star[0];
+                    }
+                  }
+                }
+                System.out.println("Closest Stars to x:" + x1 + ", y:" + y1 + ", z:" + z1 + "are");
+                for (int j = 0; j < k; j++){
+                  System.out.println("Star: " + closest_stars[j][1] + ", With distance " + closest_stars[j][0]);
                 }
 
               }
@@ -177,36 +177,6 @@ public final class Main {
     }
 
   }
-
-//          if (arguments[0].equals("naive_neighbors") && arguments.length == 5){
-//            Integer k = Integer.parseInt(arguments[1]);
-//            Integer[] closest_stars = new Integer[k];
-//            Float my_star_x = Float.parseFloat(arguments[2]);
-//            Float my_star_y = Float.parseFloat(arguments[3]);
-//            Float my_star_z = Float.parseFloat(arguments[4]);
-//
-//            System.out.println("Name :" + stored_stars.get(3)[1]);
-//            }
-//
-//          //loads a file containing stars' position information
-//          if (arguments[0].equals("stars")) {
-//            File filename = new File(arguments[1]);
-//            try (BufferedReader mybr = new BufferedReader(new InputStreamReader(
-//                new FileInputStream(filename), StandardCharsets.UTF_8))) {
-//
-//              // reads the file line by line
-//              mybr.readLine(); // removes title line
-//              String line;
-//              while ((line = mybr.readLine()) != null) {
-//                String[] columns = line.split(",");
-//                //stores star's data
-//                stored_stars.add(columns);
-//              }
-//            } catch (IOException e) {
-//              System.out.println("ERROR: File not found");
-//            }
-//
-//          }
 
 
   private static FreeMarkerEngine createEngine() {
