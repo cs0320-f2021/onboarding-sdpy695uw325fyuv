@@ -156,6 +156,7 @@ public final class Main {
                 }
                 System.out.println("Closest Stars to x:" + x1 + ", y:" + y1 + ", z:" + z1 + "are");
                 for (int j = 0; j < k; j++){
+
                   System.out.println("Star: " + closest_stars[j][1] + ", With distance " + closest_stars[j][0]);
                 }
 
