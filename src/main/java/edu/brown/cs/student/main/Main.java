@@ -9,11 +9,9 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -47,18 +45,56 @@ public final class Main {
   }
 
   private String[] args;
+  private HashMap<Integer, Star> stored_stars;
+
 
   private Main(String[] args) {
     this.args = args;
+    stored_stars = new HashMap<Integer, Star>();
   }
 
 
-  // takes in 2 star numbers and the star coordinates returns the distance between them
+  // takes in 2 sets of coordinates and returns the distance between them
   private float getDistance(Float x1, Float x2, Float y1, Float y2, Float z1, Float z2){
     float distance = (float)
         Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2) + Math.pow((z2 - z1), 2));
     return distance;
   }
+
+
+  // recursive function to sort array values
+  private void quickSort(ArrayList<Star> a, int low, int high){
+    if (low < high) {
+      int partitionIndex = partition(a, low, high);
+      quickSort(a, low, partitionIndex-1);
+      quickSort(a, partitionIndex+1, high);
+    }
+  }
+
+  //aids quicksort function: divides an arraylist in 2 and sorts e
+  private int partition(ArrayList<Star> a, int low, int high) {
+    int pivotIndex = (int) Math.floor(Math.random() * (high-low) + low);
+    Star pivotValue = a.get(pivotIndex);
+    a.set(pivotIndex, a.get(high));
+    a.set(high, pivotValue);
+    int line = low;
+
+    for (int j = low; j < high-1; j++){
+      if (a.get(j).getMyDist() < pivotValue.getMyDist()) {
+        Star tempPivot = a.get(line);
+        a.set(line, a.get(j));
+        a.set(j, tempPivot);
+      }
+      line += line;
+    }
+
+    Star tempPivot = a.get(line);
+    a.set(line, a.get(high));
+    a.set(high, tempPivot);
+
+    return line;
+  }
+
 
 
   private void run() {
@@ -81,7 +117,6 @@ public final class Main {
       runSparkServer((int) options.valueOf("port"));
     }
 
-    // TODO: Add your REPL here!
     try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
       String input;
       while ((input = br.readLine()) != null) {
@@ -125,14 +160,15 @@ public final class Main {
                 String line;
                 while ((line = mybr.readLine()) != null) {
                   String[] columns = line.split(",");
-                  //stores star's data
-                  //stored_stars.add(columns);
+                  //instantiates a star to hold data + adds it to the hashmap
+                  Star star = new Star(
+                      Integer.parseInt(columns[0]),
+                      columns[1],
+                      Float.parseFloat(columns[2]),
+                      Float.parseFloat(columns[3]),
+                      Float.parseFloat(columns[4]));
 
-                  Float xval = Float.parseFloat(columns[2]);
-                  Float yval = Float.parseFloat(columns[3]);
-                  Float zval = Float.parseFloat(columns[4]);
-
-                  starMap.put(columns[1], new Float[] {xval, yval, zval});
+                  stored_stars.put(Integer.parseInt(columns[0]), star);
                 }
                 System.out.println("stars imported");
               } catch (IOException e) {
@@ -140,67 +176,40 @@ public final class Main {
               }
               break;
 
+              //naive_neighbors: calculates closest neighbors to a star
             case "naive_neighbors":
               if (arguments.length == 5) {
                 Integer k = Integer.parseInt(arguments[1]);
-                String[][] closest_stars = new String[k][2];
-                ArrayList<String[]> nearest = new ArrayList<String[]>();
-
-                //sets default nearest neighbors to max
-                for (int i = 0; i < k; i++){
-                  closest_stars[i][0] = String.valueOf(10000000);
-                }
 
                 //extracts location data from input
                 Float x1 = Float.parseFloat(arguments[2]);
                 Float y1 = Float.parseFloat(arguments[3]);
                 Float z1 = Float.parseFloat(arguments[4]);
 
+                ArrayList<Star> all_stars = new ArrayList<Star>();
+
                 //iterate through all stored stars to find distance to new star
-                //for (int i = 0; i < stored_stars.size(); i++){
-                for (String key : starMap.keySet()){
-                  //String[] star = stored_stars.get(i);
-                  String star = key;
+                for (Star star : stored_stars.values()) {
+                  Float x2 = star.getX();
+                  Float y2 = star.getY();
+                  Float z2 = star.getZ();
 
-                  System.out.println("star =  " + star);
-//                  Float x2 = Float.parseFloat(star[2]);
-//                  Float y2 = Float.parseFloat(star[3]);
-//                  Float z2 = Float.parseFloat(star[4]);
-
-                    Float[] coordinates = starMap.get(key);
-
-                    Float x2 = coordinates[0];
-                    Float y2 = coordinates[1];
-                    Float z2 = coordinates[2];
-
-                  Float dist = getDistance(x1, x2, y1, y2,z1, z2);
-
-                  //compares new distance to previous distance
-                  for (int j = 0; j < k; j++){
-                    System.out.println("Double.parseDouble(closest_stars[j][0]) = " + Double.parseDouble(closest_stars[j][0]));
-                    System.out.println("dist =  " + dist);
-                    if (Double.parseDouble(closest_stars[j][0]) == dist){
-                      if (Math.random() > .5) {
-                        System.out.println("math.random()" + Math.random());
-                        closest_stars[j][0] = String.valueOf(dist);
-                        closest_stars[j][1] = star[1];
-                      }
-                    }
-                    else if (Double.parseDouble(closest_stars[j][0]) > dist){
-                      System.out.println("check 5.star [1]: " + star[1]);
-                      closest_stars[j][0] = String.valueOf(dist);
-                      closest_stars[j][1] = star[1];
-                      System.out.println("check 6 ");
-                    }
-                    else {
-
-                    }
-                  }
+                  star.setMyDist(getDistance(x1, x2, y1, y2, z1, z2));
+                  all_stars.add(star);
                 }
-                System.out.println("The closest Stars to x:" + x1 + ", y:" + y1 + ", z:" + z1 + " are:");
+
+                this.quickSort(all_stars, 0, all_stars.size()-1);
+
+                System.out.println("The closest " + k + " stars to x:" + x1 + ", y:" + y1 + ", z:" + z1 + " are:");
 
                 for (int j = 0; j < k; j++){
-                  System.out.println(j + ". Star: " + closest_stars[j][1] + ", With distance: " + closest_stars[j][0]);
+                  System.out.println(
+                      j
+                      + ". Star Number: "
+                      + all_stars.get(j).getStarNum()
+                      + ", With distance: "
+                      + all_stars.get(j).getMyDist()
+                      );
                 }
 
               }

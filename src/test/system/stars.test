@@ -1,0 +1,10 @@
+ARGS
+
+INPUT
+stars /Users/Chloe/Desktop/cs32/onboarding-sdpy695uw325fyuv/data/stars/ten-star.csv
+naive_neighbors 1 0 0 0
+
+OUTPUT
+The closest 1 stars to x:0, y:0, z:0 are
+1. Star Number: 0, With distance: 0
+END
