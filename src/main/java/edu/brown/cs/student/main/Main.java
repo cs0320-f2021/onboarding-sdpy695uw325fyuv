@@ -47,7 +47,6 @@ public final class Main {
   private String[] args;
   private HashMap<Integer, Star> stored_stars;
 
-
   private Main(String[] args) {
     this.args = args;
     stored_stars = new HashMap<Integer, Star>();
